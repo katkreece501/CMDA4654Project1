@@ -59,6 +59,7 @@ knitr::opts_chunk$set(echo = TRUE,
 library(ggplot2)
 library(tidyverse)
 library(kableExtra)
+library(patchwork)
 source("Reece_Wong_Zahir_Project_1.R")
 ```
 
@@ -80,6 +81,8 @@ data("ozone")
 ## Part 1
 
 ```{r}
+# Fit models and overlay on top of each other
+# For easy comparison
 ggplot(ozone, aes(x = temperature, y = ozone)) + theme_bw() + geom_point() +
   geom_smooth(method = "lm", se = F, aes(color = "1st")) +
   geom_smooth(method = "lm", formula = "y ~ poly(x, 2)", se = F, aes(color = "2nd")) +
@@ -89,7 +92,8 @@ ggplot(ozone, aes(x = temperature, y = ozone)) + theme_bw() + geom_point() +
   geom_smooth(method = "lm", formula = "y ~ poly(x, 6)", se = F, aes(color = "6th")) +
   scale_color_manual(name = "Polynomial Degree", 
                      breaks = c("1st", "2nd", "3rd", "4th", "5th", "6th"), 
-                     values = c("red", "orange", "yellow", "green", "blue", "purple"))
+                     values = c("red", "orange", "yellow", "green", "blue", "purple")) +
+  labs(title = "Polynomial Regression of Ozone on Temperature")
 ```
 
 From the graph, it seems like the 2nd-degree fit is the best. However, none of the degrees seem to give a satisfactory fit.
@@ -97,34 +101,224 @@ From the graph, it seems like the 2nd-degree fit is the best. However, none of t
 ## Part 2
 
 ```{r}
+# Where we'll store all the LOESS fits we're making
 models <- vector(mode = "list", length = 20)
+# Staring span value
 span_val <- 0.25
+# Fit all the degree-1 models
 for (i in 1:10) {
-  models[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$temperature,
+  models[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$ozone,
                        span = span_val, show.plot = FALSE)
   span_val <- span_val + 0.05
 }
+# Reset span
 span_val <- 0.25
+# Fit all the degree-2 models
 for (i in 11:20) {
-  models[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$temperature,
+  models[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$ozone,
                        span = span_val, degree = 2, show.plot = FALSE)
   span_val <- span_val + 0.05
 }
-model_df <- dplyr::bind_rows(models)
-model_df <- select(model_df, -c(N_train, N_test, loessplot))
+# Put the span, degree, and MSE into dataframe for easy table making
+model_df <- dplyr::bind_rows( lapply(models, function(m) {
+  data.frame(
+      span = m$span,
+      degree = m$degree,
+      MSE = m$MSE
+    )
+  })
+)
+# Output table
 knitr::kable(
   model_df,
-  caption = "Loess Fits on Ozone Data"
+  caption = "LOESS Fits on Ozone Data"
 )
 ```
 
+From the table, the best fits with a degree of 1 occur for span values of 0.25, 0.30, and 0.35, and the best fits with a degree of 2 occur for span values of 0.25, 0.30, and 0.35 as well.
+
+```{r}
+# Use the plots from the myloess function, but add titles
+p1 <- models[[1]]$loessplot + labs(title = "degree = 1, span = 0.25") 
+p2 <- models[[2]]$loessplot + labs(title = "degree = 1, span = 0.30")
+p3 <- models[[3]]$loessplot + labs(title = "degree = 1, span = 0.35")
+p4 <- models[[11]]$loessplot + labs(title = "degree = 2, span = 0.25")
+p5 <- models[[12]]$loessplot + labs(title = "degree = 2, span = 0.30")
+p6 <- models[[13]]$loessplot + labs(title = "degree = 2, span = 0.35")
+# Use patchwork library to plot all together
+(p1 + p2 + p3) / (p4 + p5 + p6) + plot_annotation(title = "Best LOESS fits on Ozone data")
+```
+
+Based the plots, I would consider all 6 of the models to be better fits than any of the polynomial fits. However, I would also consider almost all of the curves to be somewhat overfitted to the data. In particular, the curves where the local fits used a degree 2 polynomial are very jagged, seemingly in response to some small shifts in the data; the degree-1 models with spans of 0.25 and 0.30 also show some of this jaggedness, though on a lesser degree. Of all of the "best" fits, the one with the least signs of overfitting is the LOESS curve with degree = 1 and span = 0.35.
+
 ## Part 3
+
+```{r}
+# Where we'll store all the LOESS fits we're making
+baser_models <- vector(mode = "list", length = 20)
+# Staring span value
+span_val <- 0.25
+# Fit all the degree-1 models
+for (i in 1:10) {
+  baser_models[[i]] <- loess(ozone ~ temperature, data = ozone, span = span_val, degree = 1)
+  span_val <- span_val + 0.05
+}
+# Reset span
+span_val <- 0.25
+# Fit all the degree-2 models
+for (i in 11:20) {
+  baser_models[[i]] <- loess(ozone ~ temperature, data = ozone, span = span_val)
+  span_val <- span_val + 0.05
+}
+# Put the span, degree, and RSE into dataframe for easy table making
+baser_model_df <- dplyr::bind_rows(lapply(baser_models, function(m) {
+  data.frame(
+      span = m$pars$span,
+      degree = m$pars$degree,
+      RSE = m$s
+    )
+  })
+)
+# Output table
+knitr::kable(
+  baser_model_df,
+  caption = "Loess Fits on Ozone Data, with loess()"
+)
+```
+
+Although the built in `loess()` function uses RSE instead of MSE, it agrees on the best 3 models of each degree.
+
+```{r}
+# Use the plots from the myloess function, but add titles
+g1 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+  geom_smooth(method = "loess", span = 0.25, se = F, method.args = list(degree = 1)) +
+  labs(title = "degree = 1, span = 0.25")
+g2 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+  geom_smooth(method = "loess", span = 0.3, se = F, method.args = list(degree = 1)) +
+  labs(title = "degree = 1, span = 0.30")
+g3 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+  geom_smooth(method = "loess", span = 0.35, se = F, method.args = list(degree = 1)) +
+  labs(title = "degree = 1, span = 0.35")
+g4 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+  geom_smooth(method = "loess", span = 0.25, se = F, method.args = list(degree = 2)) +
+  labs(title = "degree = 2, span = 0.25")
+g5 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+  geom_smooth(method = "loess", span = 0.3, se = F, method.args = list(degree = 2)) +
+  labs(title = "degree = 2, span = 0.30")
+g6 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+  geom_smooth(method = "loess", span = 0.35, se = F, method.args = list(degree = 2)) +
+  labs(title = "degree = 2, span = 0.35")
+# Use patchwork library to plot all together
+(g1 + g2 + g3) / (g4 + g5 + g6) + plot_annotation(title = "Best LOESS fits on Ozone data, with loess()")
+```
+
+The plots look very similar to those from the `myloess()` function. The only difference is that the curves look a tad smoother.
 
 # Problem 2
 
+```{r}
+# Loading the data
+library(MASS)
+data("mcycle")
+load("mcycle_test.RData")
+data("mcycle_test")
+```
+
 ## Part 1
 
+We can use the same fitting-and-plotting process as in part 3 of problem 1:
+
+```{r}
+# Where we'll store all the LOESS fits we're making
+models <- vector(mode = "list", length = 20)
+# Staring span value
+span_val <- 0.25
+# Fit all the degree-1 models
+for (i in 1:10) {
+  models[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
+                       span = span_val, show.plot = FALSE)
+  span_val <- span_val + 0.05
+}
+# Reset span
+span_val <- 0.25
+# Fit all the degree-2 models
+for (i in 11:20) {
+  models[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
+                       span = span_val, degree = 2, show.plot = FALSE)
+  span_val <- span_val + 0.05
+}
+# Put the span, degree, and MSE into dataframe for easy table making
+model_df <- dplyr::bind_rows( lapply(models, function(m) {
+  data.frame(
+      span = m$span,
+      degree = m$degree,
+      MSE = m$MSE
+    )
+  })
+)
+# Output table
+knitr::kable(
+  model_df,
+  caption = "LOESS Fits on mcycle Data"
+)
+```
+
+For degree = 1, the best span values are 0.25, 0.30, and 0.35. For degree = 2, the best span values are also 0.25, 0.30, and 0.35.
+
+```{r}
+# Use the plots from the myloess function, but add titles
+p1 <- models[[1]]$loessplot + labs(title = "degree = 1, span = 0.25") 
+p2 <- models[[2]]$loessplot + labs(title = "degree = 1, span = 0.30")
+p3 <- models[[3]]$loessplot + labs(title = "degree = 1, span = 0.35")
+p4 <- models[[11]]$loessplot + labs(title = "degree = 2, span = 0.25")
+p5 <- models[[12]]$loessplot + labs(title = "degree = 2, span = 0.30")
+p6 <- models[[13]]$loessplot + labs(title = "degree = 2, span = 0.35")
+# Use patchwork library to plot all together
+(p1 + p2 + p3) / (p4 + p5 + p6) + plot_annotation(title = "Best LOESS fits on mcycle data")
+```
+
+All of the plots look pretty good, but in my opinion, the models with degree = 2 do a better job capturing the true shape than the models with degree = 1, especially for the flat section of points at the far left and the large curve in the middle of the plot. Also, all of the best models with degree = 2 have lower MSE values than all of the best models with degree = 1. Thus, I would say LOESS with degree = 2 and a span of 0.25, 0.30, or 0.35 provides the best fits to the data.
+
 ## Part 2
+
+```{r}
+# Where we'll store all the LOESS fits we're making
+test_models <- vector(mode = "list", length = 33)
+# Staring span value
+span_val <- 0.1
+# Fit all the degree-1 models from span = 0.1 to 0.9
+for (i in 1:16) {
+  test_models[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
+                              x_test = mcycle_test$times, y_test = mcycle_test$accel,
+                       span = span_val, show.plot = FALSE)
+  span_val <- span_val + 0.05
+}
+# Reset span
+span_val <- 0.1
+# Fit all the degree-2 models from span = 0.1 to 0.9
+for (i in 17:32) {
+  test_models[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
+                              x_test = mcycle_test$times, y_test = mcycle_test$accel,
+                       span = span_val, degree = 2, show.plot = FALSE)
+  span_val <- span_val + 0.05
+}
+# Put the span, degree, and MSE into a dataframe for easy table making
+test_model_df <- dplyr::bind_rows( lapply(test_models, function(m) {
+  data.frame(
+      span = m$span,
+      degree = m$degree,
+      MSE = m$MSE
+    )
+  })
+)
+# Output table
+knitr::kable(
+  test_model_df,
+  caption = "LOESS Fits on mcycle testing data"
+)
+```
+
+For both of degree 1 and 2, the optimal spans that minimize the MSE is 0.25.
 
 # Problem 3
 
