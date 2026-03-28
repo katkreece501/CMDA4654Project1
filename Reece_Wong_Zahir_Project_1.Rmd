@@ -1,0 +1,164 @@
+---
+title: "CMDA-4654  \n Project 1"
+author: "Kathleen Reece, Curtis Wong, and Abia Zahir"
+date: "`r format(Sys.time(),'%B %d, %Y')`"
+output:
+  pdf_document:
+    highlight: haddock
+keep_tex: no
+number_sections: no
+html_document:
+  df_print: paged
+geometry: margin = 0.5in
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{longtable}
+- \usepackage{array}
+- \usepackage{multirow}
+- \usepackage{wrapfig}
+- \usepackage{float}
+- \usepackage{colortbl}
+- \usepackage{pdflscape}
+- \usepackage{tabu}
+- \usepackage{threeparttable}
+- \usepackage{threeparttablex}
+- \usepackage[normalem]{ulem}
+- \usepackage{makecell}
+- \usepackage{xcolor}
+editor_options:
+  chunk_output_type: console
+documentclass: article
+urlcolor: blue
+---
+  
+<!-- The above is set to automatically compile to a .pdf file.   -->
+<!-- It will only succeed if LaTeX is installed. -->
+
+
+```{r setup, include=FALSE}
+# This is the setup chunk
+#  Here you can set global options for the entire document
+
+library(knitr) # I recommend doing this here
+
+# Although you can call functions from a library using the following notation
+#  without loading the entire library.
+knitr::opts_chunk$set(echo = TRUE, 
+                      comment = NA, # Required
+                      fig.path = "./figures/",  # Store all figures here in relative path (make the folder first)
+                      fig.align = "center",
+                      fig.width = 7,
+                      fig.height = 7,
+                      message = FALSE, # Turn off load messages
+                      warning = FALSE # Turn off warnings
+                      )
+
+```
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(kableExtra)
+source("Reece_Wong_Zahir_Project_1.R")
+```
+
+
+\clearpage
+<!-- ---------------------------------------------------------------------------------------------------- -->
+<!-- ---------------- Homework Problems start below these lines ----------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------- -->
+
+
+# Problem 1
+
+```{r}
+# Loading in the data set
+load("ozone.RData")
+data("ozone")
+```
+
+## Part 1
+
+```{r}
+ggplot(ozone, aes(x = temperature, y = ozone)) + theme_bw() + geom_point() +
+  geom_smooth(method = "lm", se = F, aes(color = "1st")) +
+  geom_smooth(method = "lm", formula = "y ~ poly(x, 2)", se = F, aes(color = "2nd")) +
+  geom_smooth(method = "lm", formula = "y ~ poly(x, 3)", se = F, aes(color = "3rd")) +
+  geom_smooth(method = "lm", formula = "y ~ poly(x, 4)", se = F, aes(color = "4th")) +
+  geom_smooth(method = "lm", formula = "y ~ poly(x, 5)", se = F, aes(color = "5th")) +
+  geom_smooth(method = "lm", formula = "y ~ poly(x, 6)", se = F, aes(color = "6th")) +
+  scale_color_manual(name = "Polynomial Degree", 
+                     breaks = c("1st", "2nd", "3rd", "4th", "5th", "6th"), 
+                     values = c("red", "orange", "yellow", "green", "blue", "purple"))
+```
+
+From the graph, it seems like the 2nd-degree fit is the best. However, none of the degrees seem to give a satisfactory fit.
+
+## Part 2
+
+```{r}
+models <- vector(mode = "list", length = 20)
+span_val <- 0.25
+for (i in 1:10) {
+  models[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$temperature,
+                       span = span_val, show.plot = FALSE)
+  span_val <- span_val + 0.05
+}
+span_val <- 0.25
+for (i in 11:20) {
+  models[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$temperature,
+                       span = span_val, degree = 2, show.plot = FALSE)
+  span_val <- span_val + 0.05
+}
+model_df <- dplyr::bind_rows(models)
+model_df <- select(model_df, -c(N_train, N_test, loessplot))
+knitr::kable(
+  model_df,
+  caption = "Loess Fits on Ozone Data"
+)
+```
+
+## Part 3
+
+# Problem 2
+
+## Part 1
+
+## Part 2
+
+# Problem 3
+
+# Problem 4
+
+## Part 1
+
+## kNN
+
+### Part 2
+
+### Part 3
+
+### Part 4
+
+### Part 5
+
+## dnkNN
+
+### Part 2
+
+### Part 3
+
+### Part 4
+
+### Part 5
+
+# Problem 5
+
+## Part a
+
+## Part b
+
+# Problem 6
+
+
+
