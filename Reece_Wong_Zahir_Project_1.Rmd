@@ -55,7 +55,7 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ```
 
-```{r}
+```{r, include=FALSE}
 library(ggplot2)
 library(tidyverse)
 library(kableExtra)
@@ -102,12 +102,12 @@ From the graph, it seems like the 2nd-degree fit is the best. However, none of t
 
 ```{r}
 # Where we'll store all the LOESS fits we're making
-models <- vector(mode = "list", length = 22)
+models_p1 <- vector(mode = "list", length = 22)
 # Staring span value
 span_val <- 0.25
 # Fit all the degree-1 models
 for (i in 1:11) {
-  models[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$ozone,
+  models_p1[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$ozone,
                        span = span_val, show.plot = FALSE)
   span_val <- span_val + 0.05
 }
@@ -115,12 +115,12 @@ for (i in 1:11) {
 span_val <- 0.25
 # Fit all the degree-2 models
 for (i in 12:22) {
-  models[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$ozone,
+  models_p1[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$ozone,
                        span = span_val, degree = 2, show.plot = FALSE)
   span_val <- span_val + 0.05
 }
 # Put the span, degree, and MSE into dataframe for easy table making
-model_df <- dplyr::bind_rows( lapply(models, function(m) {
+model_df <- dplyr::bind_rows( lapply(models_p1, function(m) {
   data.frame(
       span = m$span,
       degree = m$degree,
@@ -139,12 +139,18 @@ From the table, the best fits with a degree of 1 occur for span values of 0.25, 
 
 ```{r}
 # Use the plots from the myloess function, but add titles
-p1 <- models[[1]]$loessplot + labs(title = "degree = 1, span = 0.25") 
-p2 <- models[[2]]$loessplot + labs(title = "degree = 1, span = 0.30")
-p3 <- models[[3]]$loessplot + labs(title = "degree = 1, span = 0.35")
-p4 <- models[[11]]$loessplot + labs(title = "degree = 2, span = 0.25")
-p5 <- models[[12]]$loessplot + labs(title = "degree = 2, span = 0.30")
-p6 <- models[[13]]$loessplot + labs(title = "degree = 2, span = 0.35")
+p1 <- models_p1[[1]]$loessplot + labs(title = "degree = 1, span = 0.25",
+                                   x = "temperature", y = "ozone") 
+p2 <- models_p1[[2]]$loessplot + labs(title = "degree = 1, span = 0.30",
+                                   x = "temperature", y = "ozone")
+p3 <- models_p1[[3]]$loessplot + labs(title = "degree = 1, span = 0.35",
+                                   x = "temperature", y = "ozone")
+p4 <- models_p1[[11]]$loessplot + labs(title = "degree = 2, span = 0.25",
+                                   x = "temperature", y = "ozone")
+p5 <- models_p1[[12]]$loessplot + labs(title = "degree = 2, span = 0.30",
+                                   x = "temperature", y = "ozone")
+p6 <- models_p1[[13]]$loessplot + labs(title = "degree = 2, span = 0.35",
+                                   x = "temperature", y = "ozone")
 # Use patchwork library to plot all together
 (p1 + p2 + p3) / (p4 + p5 + p6) + plot_annotation(title = "Best LOESS fits on Ozone data")
 ```
@@ -155,23 +161,23 @@ Based the plots, I would consider all 6 of the models to be better fits than any
 
 ```{r}
 # Where we'll store all the LOESS fits we're making
-baser_models <- vector(mode = "list", length = 22)
+baser_models_p1 <- vector(mode = "list", length = 22)
 # Staring span value
 span_val <- 0.25
 # Fit all the degree-1 models
 for (i in 1:11) {
-  baser_models[[i]] <- loess(ozone ~ temperature, data = ozone, span = span_val, degree = 1)
+  baser_models_p1[[i]] <- loess(ozone ~ temperature, data = ozone, span = span_val, degree = 1)
   span_val <- span_val + 0.05
 }
 # Reset span
 span_val <- 0.25
 # Fit all the degree-2 models
 for (i in 12:22) {
-  baser_models[[i]] <- loess(ozone ~ temperature, data = ozone, span = span_val)
+  baser_models_p1[[i]] <- loess(ozone ~ temperature, data = ozone, span = span_val)
   span_val <- span_val + 0.05
 }
 # Put the span, degree, and RSE into dataframe for easy table making
-baser_model_df <- dplyr::bind_rows(lapply(baser_models, function(m) {
+baser_model_df <- dplyr::bind_rows(lapply(baser_models_p1, function(m) {
   data.frame(
       span = m$pars$span,
       degree = m$pars$degree,
@@ -230,12 +236,12 @@ We can use the same fitting-and-plotting process as in part 3 of problem 1:
 
 ```{r}
 # Where we'll store all the LOESS fits we're making
-models <- vector(mode = "list", length = 22)
+models_p2 <- vector(mode = "list", length = 22)
 # Staring span value
 span_val <- 0.25
 # Fit all the degree-1 models
 for (i in 1:11) {
-  models[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
+  models_p2[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
                        span = span_val, show.plot = FALSE)
   span_val <- span_val + 0.05
 }
@@ -243,12 +249,12 @@ for (i in 1:11) {
 span_val <- 0.25
 # Fit all the degree-2 models
 for (i in 12:22) {
-  models[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
+  models_p2[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
                        span = span_val, degree = 2, show.plot = FALSE)
   span_val <- span_val + 0.05
 }
 # Put the span, degree, and MSE into dataframe for easy table making
-model_df <- dplyr::bind_rows( lapply(models, function(m) {
+model_df <- dplyr::bind_rows( lapply(models_p2, function(m) {
   data.frame(
       span = m$span,
       degree = m$degree,
@@ -267,12 +273,18 @@ For degree = 1, the best span values are 0.25, 0.30, and 0.35. For degree = 2, t
 
 ```{r}
 # Use the plots from the myloess function, but add titles
-p1 <- models[[1]]$loessplot + labs(title = "degree = 1, span = 0.25") 
-p2 <- models[[2]]$loessplot + labs(title = "degree = 1, span = 0.30")
-p3 <- models[[3]]$loessplot + labs(title = "degree = 1, span = 0.35")
-p4 <- models[[11]]$loessplot + labs(title = "degree = 2, span = 0.25")
-p5 <- models[[12]]$loessplot + labs(title = "degree = 2, span = 0.30")
-p6 <- models[[13]]$loessplot + labs(title = "degree = 2, span = 0.35")
+p1 <- models_p2[[1]]$loessplot + labs(title = "degree = 1, span = 0.25",
+                                   x = "time", y = "acceleration") 
+p2 <- models_p2[[2]]$loessplot + labs(title = "degree = 1, span = 0.30",
+                                   x = "time", y = "acceleration")
+p3 <- models_p2[[3]]$loessplot + labs(title = "degree = 1, span = 0.35",
+                                   x = "time", y = "acceleration")
+p4 <- models_p2[[12]]$loessplot + labs(title = "degree = 2, span = 0.25",
+                                   x = "time", y = "acceleration")
+p5 <- models_p2[[13]]$loessplot + labs(title = "degree = 2, span = 0.30",
+                                   x = "time", y = "acceleration")
+p6 <- models_p2[[14]]$loessplot + labs(title = "degree = 2, span = 0.35",
+                                   x = "time", y = "acceleration")
 # Use patchwork library to plot all together
 (p1 + p2 + p3) / (p4 + p5 + p6) + plot_annotation(title = "Best LOESS fits on mcycle data")
 ```
@@ -342,7 +354,7 @@ for (i in 10:18) {
   span_val <- span_val + 0.01
 }
 # Put the span, degree, and MSE into a dataframe for easy table making
-test_model_df <- dplyr::bind_rows( lapply(test_models2, function(m) {
+test_model_df2 <- dplyr::bind_rows( lapply(test_models2, function(m) {
   data.frame(
       span = m$span,
       degree = m$degree,
@@ -352,22 +364,39 @@ test_model_df <- dplyr::bind_rows( lapply(test_models2, function(m) {
 )
 # Output table
 knitr::kable(
-  test_model_df,
+  test_model_df2,
   caption = "LOESS Fits on mcycle testing data"
 )
 ```
 
-From our closer look, the optimal span when degree = 1 is 0.10, and the optimal span when degree = 2 is 0.17.
+From our closer look, the optimal span when degree = 1 is 0.12, and the optimal span when degree = 2 is 0.21. Interestingly, there is a difference in relationship between spans and MSE when using only the training data vs the testing and training data. For the former, the MSE increased as span increased; for the latter, the relationship seems to be more of a curve that reaches a mimimum MSE before rapidly increasing toward infinity. We can make a graph to further understand this relationship:
+
+```{r}
+# Combine dataframes containing the spans and MSEs into one and split
+# them again by degree
+all_spans <- rbind(test_model_df, test_model_df2)
+spans1 <- filter(all_spans, degree == 1)
+spans2 <- filter(all_spans, degree == 2)
+# Graph MSE vs span for each degree
+span_curve1 <- ggplot(data = spans1, aes(x = span, y = MSE)) + geom_point() + 
+  geom_line(aes(group = 1)) + theme_bw() + labs(title = "degree = 1")
+span_curve2 <- ggplot(data = spans2, aes(x = span, y = MSE)) + geom_point() + 
+  geom_line(aes(group = 1)) + theme_bw() + labs(title = "degree = 2")
+span_curve1 + span_curve2 + plot_annotation(title = "MSE vs span")
+```
 
 We can plot the data (testing and training) with the curves with the optimal spans for each degree
 
 ```{r}
-best_span1 <- test_models2[[5]]$loessplot + 
+# Use myloess plots as base, then recolor the points and add labels
+best_span1 <- test_models2[[7]]$loessplot + 
   geom_point(data = mcycle, aes(x = times, y = accel), color = "gray") + 
-  geom_point(color = "red") + labs(title = "degree = 1, span = 0.10")
-best_span2 <- test_models2[[11]]$loessplot + 
+  geom_point(color = "red") + labs(title = "degree = 1, span = 0.12",
+                                   x = "time", y = "acceleration")
+best_span2 <- test_models2[[15]]$loessplot + 
   geom_point(data = mcycle, aes(x = times, y = accel), color = "gray") +
-  geom_point(color = "red") + labs(title = "degree = 2, span = 0.17")
+  geom_point(color = "red") + labs(title = "degree = 2, span = 0.21",
+                                   x = "time", y = "acceleration")
 
 (best_span1 + best_span2) + plot_annotation("LOESS fits with spans minimizing MSE on testing mcycle data")
 ```
@@ -375,10 +404,13 @@ best_span2 <- test_models2[[11]]$loessplot +
 We can compare our plots to the results from R's built in `loess()` function:
 
 ```{r}
-compare_d1 <- loess(accel ~ times, data = mcycle, span = 0.1, degree = 1)
-compare_d2 <- loess(accel ~ times, data = mcycle, span = 0.17)
+# Get fits using the base R loess function
+compare_d1 <- loess(accel ~ times, data = mcycle, span = 0.12, degree = 1)
+compare_d2 <- loess(accel ~ times, data = mcycle, span = 0.21)
+# Predict on testing data
 ypred_d1 <- predict(compare_d1, newdata = mcycle_test)
 ypred_d2 <- predict(compare_d2, newdata = mcycle_test)
+# Graph fits
 best_span1_baser <- ggplot(data = mcycle, aes(x = times, y = accel)) + geom_point(color = "gray") +
   geom_point(data = mcycle_test, aes(x = times, y = accel), color = "red") + theme_bw() +
   geom_line(data = data.frame(mcycle_test$times, ypred_d1), aes(x = mcycle_test$times, y = ypred_d1)) 
@@ -389,6 +421,133 @@ best_span2_baser <- ggplot(data = mcycle, aes(x = times, y = accel)) + geom_poin
 ```
 
 # Problem 3
+
+```{r}
+# Reading in the data for this problem
+data("fgl")
+```
+
+The dataset I chose is the `fgl` dataset from the `MASS` library package. This dataset contains information on the refractive index, chemical makeup, and type of 214 glass fragments collected through forensic work.
+
+A data dictionary is provided below:
+
+```{r}
+# Define variable types 
+var_types <- c("numeric", "numeric", "numeric", "numeric", "numeric", "numeric",
+               "numeric", "numeric", "numeric", "Factor")
+# Add a short description for each variable
+var_labels <- c("Last 4 digits of refractive index",
+                "Sodium (% by weight of oxide)",
+                "Manganese (% by weight of oxide)",
+                "Aluminum (% by weight of oxide)",
+                "Silicon (% by weight of oxide)",
+                "Potassium (% by weight of oxide)",
+                "Calcium (% by weight of oxide)",
+                "Barium (% by weight of oxide)",
+                "Iron (% by weight of oxide)",
+                "Glass type, classified by origin")
+# Form the data dictionary as a data frame
+data_dict <- data.frame(Name = names(fgl),
+             Description = var_labels,
+             Type = var_types,
+             stringsAsFactors = FALSE)
+# Nicely format data dictionary for the output
+knitr::kable(
+  data_dict,
+  caption = "Data dictionary for fgl dataset"
+)
+```
+
+More information on the dataset, including factor levels for the `type` variable, can be found in the documentation for the `MASS` library package [here](https://www.rdocumentation.org/packages/MASS/versions/7.3-65/topics/fgl).
+
+In this analysis, we will focus on predicting calcium content from manganese content. A scatterplot of calcium vs manganese content is given below:
+
+```{r}
+# Scatterplot of Ca vs Mg
+ggplot(data = fgl, aes(x = Mg, y = Ca)) + geom_point() + theme_bw() +
+  labs(title = "Calcium vs Manganese % by weight of oxide in glass fragments",
+       x = "Manganese", y = "Calcium")
+```
+
+For fragments that had none-zero levels of both calcium and manganese, the relationship looks to be negative and somewhat linear, perhaps with a slight curve towards the right of the plot. However, note that there is a large group observations with 0% manganese content by weight of oxide, and that these observations also tend to have high levels of calcium. Thus, it is plausible that the true relationship may be a very steep curve for manganese contents close to 0% by weight of oxide while being more linear (or at least less curved) for higher manganese contents.
+
+We'll use $K$-fold cross validation with $K = 10$ to find the optimal span values for local fits with degree = 1 and for degree = 2. We'll define the span sequences differently for each degree, as degree = 2 fits will require higher span values to ensure that there are always enough unique points in the subset of the training data to fit the quadratic model; however, both span sequences will be incremented by 0.01 and cover the same amount of different possible spans. We'll then split the indicess of the data into 10 folds. Before starting the cross validation, we'll define $K \times n$ matrices to store our computed MSEs, where each row corresponds to a different fold as testing data and each column corresponds to a different possible span value.
+
+For each fold, we'll split the larger data set into training and testing data. Then, for each possible span, we'll fit the corresponding model of the right degree, and store the MSE in the corresponding matrix. Note that because the spans we're checking at each iteration of the inner loop will differ. For example, when $j=1$, we do LOESS for degree = 1 and span = 0.21 and for degree = 1 and span = 0.31. However, because we check the same amount of possible spans for each degree, there aren't any issues with one degree being done before the other. After the loops have concluded, we take the mean of each column in the MSE matrix to get the mean MSE for each span across all folds. `which.min()` is used to determine the column index of the minimum average MSE, and we can index into the corresponding array of spans for that degree to find the optimal span.
+
+```{r}
+# For reproducibility
+set.seed(329)
+k <- 10
+n <- nrow(fgl)
+# Different span values for each degree, as to avoid errors where there
+# aren't more than degree number of unique x-values in a window
+spans_d1 <- seq(0.21, 0.60, by = 0.01)
+spans_d2 <- seq(0.31, 0.70, by = 0.01)
+# Make folds
+folds <- split(sample(1:n), rep(1:k, length = n))
+# Make MSE matrices, where each row corresponds to a fold
+# and each column corresponds to a different span
+MSE_d1 <- matrix(NA, nrow = k, ncol = length(spans_d1))
+MSE_d2 <- matrix(NA, nrow = k, ncol = length(spans_d2))
+# For each fold, separate out training and testing data
+for (i in 1:k){
+  testing_indices <- folds[[i]]
+  training_data <- fgl[-testing_indices, c("Mg", "Ca")]
+  testing_data <- fgl[testing_indices, c("Mg", "Ca")]
+  # For each span, fit the model and record MSE
+  for (j in 1:length(spans_d1)) {
+    fit1 <- myloess(x_train = training_data$Mg, y_train = training_data$Ca,
+                    x_test = testing_data$Mg, y_test = testing_data$Ca, 
+                    span = spans_d1[j], degree = 1, show.plot = FALSE)
+    MSE_d1[i, j] <- fit1$MSE
+    fit2 <- myloess(x_train = training_data$Mg, y_train = training_data$Ca,
+                    x_test = testing_data$Mg, y_test = testing_data$Ca, 
+                    span = spans_d2[j], degree = 2, show.plot = FALSE)
+    MSE_d2[i, j] <- fit2$MSE
+  }
+}
+# Get mean MSEs for each span
+mean_MSE_d1 <- colMeans(MSE_d1)
+mean_MSE_d2 <- colMeans(MSE_d2)
+# Find optimal span for each degree, based on which has the lowest 
+# corresponding average MSE across all folds
+optim_span_d1 <- spans_d1[which.min(mean_MSE_d1)]
+optim_span_d2 <- spans_d2[which.min(mean_MSE_d2)]
+# Print optimal spans
+optim_span_d1
+optim_span_d2
+```
+
+For degree = 1, the optimal span is 0.23. For degree = 2, the optimal span is 0.68. We can graph the relationship between span and average MSE for each degree:
+
+```{r}
+# Bundle span and mean MSEs for each degree
+spans_df1 <- data.frame(span = spans_d1, MSE = mean_MSE_d1)
+spans_df2 <- data.frame(span = spans_d2, MSE = mean_MSE_d2)
+# Graph mean MSE vs span for each degree
+span_curve_d1 <- ggplot(data = spans_df1, aes(x = span, y = MSE)) + geom_point() + 
+  geom_line(aes(group = 1)) + theme_bw() + labs(title = "degree = 1")
+span_curve_d2 <- ggplot(data = spans_df2, aes(x = span, y = MSE)) + geom_point() + 
+  geom_line(aes(group = 1)) + theme_bw() + labs(title = "degree = 2")
+span_curve_d1 + span_curve_d2 + plot_annotation(title = "Mean MSE vs span, fgl data")
+```
+
+Interestingly, for both degree = 1 and degree = 2, the minimum MSE is around 1.6. We can also plot the LOESS fits with the optimal span for each degree:
+
+```{r}
+optim_d1 <- myloess(x_train = fgl$Mg, y_train = fgl$Ca, span = 0.23, degree = 1, 
+                    show.plot = FALSE)
+optim_d2 <- myloess(x_train = fgl$Mg, y_train = fgl$Ca, span = 0.68, degree = 2,
+                    show.plot = FALSE)
+optim_d1_plot <- optim_d1$loessplot + labs(title = "degree = 1, span = 0.23",
+                                           x = "Manganese", y = "Calcium")
+optim_d2_plot <- optim_d2$loessplot + labs(title = "degree = 2, span = 0.68",
+                                           x = "Manganese", y = "Calcium")
+optim_d1_plot + optim_d2_plot + plot_annotation(title = "Optimal LOESS fits, fgl data")
+```
+
+Interestingly, the optimal fits look a lot different than I though they would be. Much of the curvature is actually towards the right of the plot for relatively higher concentrations of manganese; there's a slight decrease in the predicted calcium content for glass fragments with that are around 3.5% manganese by weight of oxide. By contrast, when the manganese content is near 0, the curve is relatively flat. I would conjecture that if the calcium concentrations for glass fragments that are 0% manganese weren't so spread out (i.e., if they were more uniformly lower or higher compared to glass fragments that did contain some manganese), there would be more curvature in that area like I was expecting. As it is, I do believe that the LOESS fits are better than those of a standard linear or polynomial model, as the relationship does have some slight curvature that makes it not linear, but the curvature isn't strong enough for a polynomial model to completely capture.
 
 # Problem 4
 

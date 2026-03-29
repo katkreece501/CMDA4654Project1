@@ -48,19 +48,19 @@ myloess <- function(x_train, y_train, x_test = NULL, y_test = NULL,
   train_df <- data.frame("xtrain" = x_train, "ytrain" = y_train)
   # Store testing data
   if (is.null(x_test)) {
-    test_df <- data.frame("x" = x_train, "y" = y_train)
+    test_df <- data.frame("xtest" = x_train, "ytest" = y_train)
   }
   else { # x_test != NULL
-    test_df <- data.frame("x" = x_test, "y" = y_test)
+    test_df <- data.frame("xtest" = x_test, "ytest" = y_test)
   }
   # Prepare storage for predicted values
   y_hat <- numeric(length(test_df$xtest))
   # Counter for storing yhats
   index <- 1
   # Do fit for each candidate point
-  for (x in test_df$xtest) {
+  for (xtest_point in test_df$xtest) {
     # Compute distance
-    train_df$distance <- abs(x - x_train)
+    train_df$distance <- abs(xtest_point - x_train)
     # Get points for the window
     subset <- train_df |> slice_min(order_by = distance, n = window_points, 
                                     with_ties = FALSE)
@@ -69,19 +69,19 @@ myloess <- function(x_train, y_train, x_test = NULL, y_test = NULL,
     # Compute weights
     subset$weight <- tricube_weight(subset$distance)
     # Fit local model
-    subset_lm <- lm(y ~ poly(xtrain, degree), weights = weight,
+    subset_lm <- lm(ytrain ~ poly(xtrain, degree), weights = weight,
                     data = subset)
     # Get yhat
-    y_hat[index] <- predict(subset_lm, data.frame("x" = x))
+    y_hat[index] <- predict(subset_lm, data.frame("xtrain" = xtest_point))
     # Increment index
     index <- index + 1
   }
   # Compute MSE
-  MSE <- mean((y_hat - test_df$y)^2)
+  MSE <- mean((y_hat - test_df$ytest)^2)
   # Store LOESS fit data, and sort it so it plots correctly
-  loessfit <- data.frame("x" = test_df$x, "yhat" = y_hat) %>% arrange(x)
+  loessfit <- data.frame("x" = test_df$xtest, "yhat" = y_hat) %>% arrange(x)
   # Create plot
-  loessplot <- ggplot(test_df, aes(x = x, y = y)) + geom_point() + 
+  loessplot <- ggplot(test_df, aes(x = xtest, y = ytest)) + geom_point() + 
     theme_bw() + geom_line(data = loessfit, aes(x = x, y = yhat))
   # Show plot, if that option is selected
   if(show.plot) {
