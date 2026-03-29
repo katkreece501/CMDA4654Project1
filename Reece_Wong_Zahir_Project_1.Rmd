@@ -102,11 +102,11 @@ From the graph, it seems like the 2nd-degree fit is the best. However, none of t
 
 ```{r}
 # Where we'll store all the LOESS fits we're making
-models <- vector(mode = "list", length = 20)
+models <- vector(mode = "list", length = 22)
 # Staring span value
 span_val <- 0.25
 # Fit all the degree-1 models
-for (i in 1:10) {
+for (i in 1:11) {
   models[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$ozone,
                        span = span_val, show.plot = FALSE)
   span_val <- span_val + 0.05
@@ -114,7 +114,7 @@ for (i in 1:10) {
 # Reset span
 span_val <- 0.25
 # Fit all the degree-2 models
-for (i in 11:20) {
+for (i in 12:22) {
   models[[i]] <- myloess(x_train = ozone$temperature, y_train = ozone$ozone,
                        span = span_val, degree = 2, show.plot = FALSE)
   span_val <- span_val + 0.05
@@ -155,18 +155,18 @@ Based the plots, I would consider all 6 of the models to be better fits than any
 
 ```{r}
 # Where we'll store all the LOESS fits we're making
-baser_models <- vector(mode = "list", length = 20)
+baser_models <- vector(mode = "list", length = 22)
 # Staring span value
 span_val <- 0.25
 # Fit all the degree-1 models
-for (i in 1:10) {
+for (i in 1:11) {
   baser_models[[i]] <- loess(ozone ~ temperature, data = ozone, span = span_val, degree = 1)
   span_val <- span_val + 0.05
 }
 # Reset span
 span_val <- 0.25
 # Fit all the degree-2 models
-for (i in 11:20) {
+for (i in 12:22) {
   baser_models[[i]] <- loess(ozone ~ temperature, data = ozone, span = span_val)
   span_val <- span_val + 0.05
 }
@@ -230,11 +230,11 @@ We can use the same fitting-and-plotting process as in part 3 of problem 1:
 
 ```{r}
 # Where we'll store all the LOESS fits we're making
-models <- vector(mode = "list", length = 20)
+models <- vector(mode = "list", length = 22)
 # Staring span value
 span_val <- 0.25
 # Fit all the degree-1 models
-for (i in 1:10) {
+for (i in 1:11) {
   models[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
                        span = span_val, show.plot = FALSE)
   span_val <- span_val + 0.05
@@ -242,7 +242,7 @@ for (i in 1:10) {
 # Reset span
 span_val <- 0.25
 # Fit all the degree-2 models
-for (i in 11:20) {
+for (i in 12:22) {
   models[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
                        span = span_val, degree = 2, show.plot = FALSE)
   span_val <- span_val + 0.05
@@ -283,11 +283,11 @@ All of the plots look pretty good, but in my opinion, the models with degree = 2
 
 ```{r}
 # Where we'll store all the LOESS fits we're making
-test_models <- vector(mode = "list", length = 33)
+test_models <- vector(mode = "list", length = 24)
 # Staring span value
 span_val <- 0.1
-# Fit all the degree-1 models from span = 0.1 to 0.9
-for (i in 1:16) {
+# Fit all the degree-1 models from span = 0.1 to 0.65, incrementing by 0.05
+for (i in 1:12) {
   test_models[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
                               x_test = mcycle_test$times, y_test = mcycle_test$accel,
                        span = span_val, show.plot = FALSE)
@@ -295,8 +295,8 @@ for (i in 1:16) {
 }
 # Reset span
 span_val <- 0.1
-# Fit all the degree-2 models from span = 0.1 to 0.9
-for (i in 17:32) {
+# Fit all the degree-2 models from span = 0.1 to 0.65, incrementing by 0.05
+for (i in 13:24) {
   test_models[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
                               x_test = mcycle_test$times, y_test = mcycle_test$accel,
                        span = span_val, degree = 2, show.plot = FALSE)
@@ -318,7 +318,75 @@ knitr::kable(
 )
 ```
 
-For both of degree 1 and 2, the optimal spans that minimize the MSE is 0.25.
+For degree = 1, the optimal span that minimizes MSE seems to be around 0.10., and for degree = 2, the optimal span that minimizes MSE seems to be around 0.20. We can test spans closer to these values:
+
+```{r}
+# Where we'll store all the LOESS fits we're making
+test_models2 <- vector(mode = "list", length = 18)
+# Staring span value
+span_val <- 0.06
+# Fit all the degree-1 models from span = 0.06 to 0.14, incrementing by 0.01
+for (i in 1:9) {
+  test_models2[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
+                              x_test = mcycle_test$times, y_test = mcycle_test$accel,
+                       span = span_val, show.plot = FALSE)
+  span_val <- span_val + 0.01
+}
+# Reset span
+span_val <- 0.16
+# Fit all the degree-2 models from span = 0.16 to 0.24, incrementing by 0.01
+for (i in 10:18) {
+  test_models2[[i]] <- myloess(x_train = mcycle$times, y_train = mcycle$accel,
+                              x_test = mcycle_test$times, y_test = mcycle_test$accel,
+                       span = span_val, degree = 2, show.plot = FALSE)
+  span_val <- span_val + 0.01
+}
+# Put the span, degree, and MSE into a dataframe for easy table making
+test_model_df <- dplyr::bind_rows( lapply(test_models2, function(m) {
+  data.frame(
+      span = m$span,
+      degree = m$degree,
+      MSE = m$MSE
+    )
+  })
+)
+# Output table
+knitr::kable(
+  test_model_df,
+  caption = "LOESS Fits on mcycle testing data"
+)
+```
+
+From our closer look, the optimal span when degree = 1 is 0.10, and the optimal span when degree = 2 is 0.17.
+
+We can plot the data (testing and training) with the curves with the optimal spans for each degree
+
+```{r}
+best_span1 <- test_models2[[5]]$loessplot + 
+  geom_point(data = mcycle, aes(x = times, y = accel), color = "gray") + 
+  geom_point(color = "red") + labs(title = "degree = 1, span = 0.10")
+best_span2 <- test_models2[[11]]$loessplot + 
+  geom_point(data = mcycle, aes(x = times, y = accel), color = "gray") +
+  geom_point(color = "red") + labs(title = "degree = 2, span = 0.17")
+
+(best_span1 + best_span2) + plot_annotation("LOESS fits with spans minimizing MSE on testing mcycle data")
+```
+
+We can compare our plots to the results from R's built in `loess()` function:
+
+```{r}
+compare_d1 <- loess(accel ~ times, data = mcycle, span = 0.1, degree = 1)
+compare_d2 <- loess(accel ~ times, data = mcycle, span = 0.17)
+ypred_d1 <- predict(compare_d1, newdata = mcycle_test)
+ypred_d2 <- predict(compare_d2, newdata = mcycle_test)
+best_span1_baser <- ggplot(data = mcycle, aes(x = times, y = accel)) + geom_point(color = "gray") +
+  geom_point(data = mcycle_test, aes(x = times, y = accel), color = "red") + theme_bw() +
+  geom_line(data = data.frame(mcycle_test$times, ypred_d1), aes(x = mcycle_test$times, y = ypred_d1)) 
+best_span2_baser <- ggplot(data = mcycle, aes(x = times, y = accel)) + geom_point(color = "gray") +
+  geom_point(data = mcycle_test, aes(x = times, y = accel), color = "red") + theme_bw() +
+  geom_line(data = data.frame(mcycle_test$times, ypred_d2), aes(x = mcycle_test$times, y = ypred_d2))
+(best_span1_baser + best_span2_baser) + plot_annotation("LOESS fits (base R) with spans minimizing MSE on testing mcycle data")
+```
 
 # Problem 3
 

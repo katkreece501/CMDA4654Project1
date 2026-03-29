@@ -45,7 +45,7 @@ myloess <- function(x_train, y_train, x_test = NULL, y_test = NULL,
   # Number of points in each window
   window_points <- floor(N_train * span)
   # Store training data 
-  train_df <- data.frame("x" = x_train, "y" = y_train)
+  train_df <- data.frame("xtrain" = x_train, "ytrain" = y_train)
   # Store testing data
   if (is.null(x_test)) {
     test_df <- data.frame("x" = x_train, "y" = y_train)
@@ -54,11 +54,11 @@ myloess <- function(x_train, y_train, x_test = NULL, y_test = NULL,
     test_df <- data.frame("x" = x_test, "y" = y_test)
   }
   # Prepare storage for predicted values
-  y_hat <- numeric(length(test_df$x))
+  y_hat <- numeric(length(test_df$xtest))
   # Counter for storing yhats
   index <- 1
   # Do fit for each candidate point
-  for (x in test_df$x) {
+  for (x in test_df$xtest) {
     # Compute distance
     train_df$distance <- abs(x - x_train)
     # Get points for the window
@@ -69,7 +69,7 @@ myloess <- function(x_train, y_train, x_test = NULL, y_test = NULL,
     # Compute weights
     subset$weight <- tricube_weight(subset$distance)
     # Fit local model
-    subset_lm <- lm(y ~ poly(x, degree), weights = weight,
+    subset_lm <- lm(y ~ poly(xtrain, degree), weights = weight,
                     data = subset)
     # Get yhat
     y_hat[index] <- predict(subset_lm, data.frame("x" = x))
