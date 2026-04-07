@@ -101,6 +101,12 @@ mykNN <- function(train, test, y_train, y_test, k = 3, weighted = TRUE){
   train <- as.matrix(train)
   test  <- as.matrix(test)
   
+  # single test observation case, turn into row vector
+  if(is.vector(test)){
+    test <- matrix(test, nrow = 1)
+  }
+
+
   # num observations
   n_test <- nrow(test)
   
