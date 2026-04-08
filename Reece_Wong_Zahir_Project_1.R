@@ -95,3 +95,101 @@ myloess <- function(x_train, y_train, x_test = NULL, y_test = NULL,
               "MSE" = MSE,
               "loessplot" = loessplot)) 
 }
+
+mykNN <- function(train, test, y_train, y_test, k = 3, weighted = TRUE){
+  
+  train <- as.matrix(train)
+  test  <- as.matrix(test)
+  
+  # single test observation case, turn into row vector
+  if(is.vector(test)){
+    test <- matrix(test, nrow = 1)
+  }
+
+
+  # num observations
+  n_test <- nrow(test)
+  
+  yhat <- vector(length = n_test)
+  
+  # classification or regression
+  is_classification <- is.factor(y_train)
+  
+  # loop through each observation
+  for(j in 1:n_test){
+    
+    # vectorized euclidean distance calculation for all training points
+    dists <- sqrt(rowSums((train - matrix(test[j,], nrow=nrow(train), ncol=ncol(train), byrow=TRUE))^2))
+    
+    # order by smallest distanc
+    idx <- order(dists)[1:k]
+    
+    # k nearest neighbor values
+    nearest_y <- y_train[idx]
+    
+    # distances for the k nearest neighbors
+    nearest_d <- dists[idx]
+    
+    # dwknn or knn
+    if(weighted){
+      w <- 1 / nearest_d
+    } else {
+      w <- rep(1, k)
+    }
+    
+    if(is_classification){
+      
+      classes <- levels(y_train)
+      scores <- rep(0, length(classes))
+      
+      # for each class get weighted value
+      for(c in 1:length(classes)){
+        scores[c] <- sum(w * (nearest_y == classes[c]))
+      }
+      
+      # assign the one with heighest score
+      yhat[j] <- classes[which.max(scores)]
+    
+      # regression case
+    } else {
+      # normalize
+      w_norm <- w / sum(w)
+      # calculate weighted average of neighbor values
+      yhat[j] <- sum(w_norm * nearest_y)
+    }
+  }
+  
+  # classification
+  if(is_classification){
+    yhat <- factor(yhat, levels = levels(y_train))
+    
+    accuracy <- mean(yhat == y_test)
+    error_rate <- 1 - accuracy
+    conf_mat <- table(Predicted = yhat, Actual = y_test)
+    
+    return(list(
+      yhat = yhat,
+      accuracy = accuracy,
+      error_rate = error_rate,
+      confusion_matrix = conf_mat,
+      k = k
+    ))
+  # regression
+  } else {
+    
+    yhat <- as.numeric(yhat)
+    residuals <- y_test - yhat
+    SSE <- sum(residuals^2)
+    n <- length(y_test)
+    MSE <- SSE / n
+    
+    return(list(
+      yhat = yhat,
+      residuals = residuals,
+      SSE = SSE,
+      n = n,
+      MSE = MSE,
+      k = k
+    ))
+  }
+}
