@@ -549,9 +549,26 @@ optim_d1_plot + optim_d2_plot + plot_annotation(title = "Optimal LOESS fits, fgl
 
 Interestingly, the optimal fits look a lot different than I though they would be. Much of the curvature is actually towards the right of the plot for relatively higher concentrations of manganese; there's a slight decrease in the predicted calcium content for glass fragments with that are around 3.5% manganese by weight of oxide. By contrast, when the manganese content is near 0, the curve is relatively flat. I would conjecture that if the calcium concentrations for glass fragments that are 0% manganese weren't so spread out (i.e., if they were more uniformly lower or higher compared to glass fragments that did contain some manganese), there would be more curvature in that area like I was expecting. As it is, I do believe that the LOESS fits are better than those of a standard linear or polynomial model, as the relationship does have some slight curvature that makes it not linear, but the curvature isn't strong enough for a polynomial model to completely capture.
 
-# Problem 4
+# Problem 4: Animated LOESS
 
 ## Part 1
+
+Using the 'gganimate' library package, we wrote an animated version of the LOESS function. Calling the function we made that animates the function- 'animated_loess', we use the function upon the 'mycycle' dataset. 
+
+```{r}
+# Load the motorcycle crash dataset
+data(mcycle, package = "MASS")
+
+# Generate animations for different span values (0.2, .33, .5, and .66)
+animated_loess(mcycle$times, mcycle$accel, span = 0.2,  filename = "mcycle_span_0.2.gif")
+animated_loess(mcycle$times, mcycle$accel, span = 0.33, filename = "mcycle_span_0.33.gif")
+animated_loess(mcycle$times, mcycle$accel, span = 0.5,  filename = "mcycle_span_0.5.gif")
+animated_loess(mcycle$times, mcycle$accel, span = 0.66, filename = "mcycle_span_0.66.gif")
+
+```
+
+After generating the gif files, each gif file shows us an animation and the results differ from each gif depending on the assigned weight given. We generated 4 animations based on different span values- 0.2, 0.33, 0.5, and 0.66. The best span value where the curvature of line of the function best follows closest to the data points positioning is span = 0.2. What we notice is the the greater in value the span is- the more offset and further the curvature of the line function is from the data points, thus the more unprecise the curves are. 
+
 
 ## kNN
 
