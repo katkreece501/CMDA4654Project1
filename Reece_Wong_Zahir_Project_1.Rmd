@@ -57,6 +57,7 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ```{r, include=FALSE}
 library(ggplot2)
+library(GGally)
 library(tidyverse)
 library(kableExtra)
 library(patchwork)
@@ -842,6 +843,9 @@ y_test  <- test_data$ozone
 X_train <- as.matrix(train_data[, colnames(ozone) != "ozone"])
 X_test  <- as.matrix(test_data[, colnames(ozone) != "ozone"])
 
+X_train <- scale(X_train)
+X_test <- scale(X_test)
+
 k_values <- 1:20
 mse_values <- numeric(length(k_values))
 
@@ -866,8 +870,73 @@ ggplot(plot_df, aes(x = k, y = MSE)) +
   theme_minimal()
 ```
 
-From the plot we see that the MSE is minimized with k=4 with it stablizing after larger k values as expected. k=4 is the optimal value that trades off variance and stability.
+From the plot we see that the MSE is minimized with k=5 with it stabilizing after larger k values as expected. k=5 is the particular value that optimizes variance and stability.
 
 # Problem 6
+Here we will apply the dwkNN function to the beloved base R dataset 'mtcars'. In particular we will predict whether the transmission is automatic (0) or manual (1) from these predictors: mpg, cyl, disp, hp, drat.
+
+More information on the dataset is here: https://www.rdocumentation.org/packages/datasets/versions/3.6.2/topics/mtcars
+
+```{r}
+# predictors
+X <- mtcars[, c("mpg", "cyl", "disp", "hp", "drat")]
+y <- factor(mtcars$am, labels = c("Automatic", "Manual"))
+
+# scatterplot matrix
+ggpairs(data = data.frame(X, am = y),
+        aes(color = am, alpha = 0.6))
+
+set.seed(67)
+
+n <- nrow(X)
+# create folds
+folds <- sample(rep(1:10, length.out = n))
+
+# storage
+k_values <- 1:20
+acc_values <- numeric(length(k_values))
+
+# loop through all k
+for (i in seq_along(k_values)) {
+  k <- k_values[i]
+  fold_acc <- numeric(10)
+  
+  # loop through all folds
+  for (f in 1:10) {
+    
+    test_split <- which(folds == f)
+    train_split <- setdiff(1:n, test_split)
+    
+    X_train <- as.matrix(X[train_split, ])
+    X_test  <- as.matrix(X[test_split, ])
+    
+    y_train <- y[train_split]
+    y_test  <- y[test_split]
+    
+    # scale
+    X_train <- scale(X_train)
+    X_test <- scale(X_test)
+    
+    result <- mykNN(X_train, X_test, y_train, y_test, k, weighted=TRUE)
+    
+    # store
+    fold_acc[f] <- result$accuracy
+  }
+  
+  acc_values[i] <- mean(fold_acc)
+}
+
+# plot accuracy vs k
+plot_df <- data.frame(k = k_values, Accuracy = acc_values)
+ggplot(plot_df, aes(x = k, y = Accuracy)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "dwkNN: Accuracy vs k",
+       x = "k",
+       y = "Average Out-of-Sample Accuracy") +
+  theme_minimal()
+```
+
+From the plot we see that k=3 and k = 4 provides the best accuracy with it relatively leveling off after with a few spikes.
 
 
