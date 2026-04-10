@@ -22,14 +22,14 @@ animated_loess <- function(x, y, span = 0.5, degree = 1, filename = "loessplot.g
   frames_data <- data.frame()
   fitted_results <- data.frame()
   
-  # Loop through each evaluation point to calculate local fits
+  # loops through each evaluation point to calculate local fits
   for (i in seq_along(eval_x)) {
     target_x <- eval_x[i]
     
     df$dist <- abs(df$x - target_x)
     dist_k <- sort(df$dist)[k]
     
-    #Tricube Weights: w = (1 - (dist/dist_k)^3)^3
+    #tricube weights: w = (1 - (dist/dist_k)^3)^3
     df$w <- ifelse(df$dist < dist_k, (1 - (df$dist / dist_k)^3)^3, 0)
     
     #fit local weighted regression
@@ -62,14 +62,47 @@ animated_loess <- function(x, y, span = 0.5, degree = 1, filename = "loessplot.g
     history_data <- rbind(history_data, fitted_results[1:i, ] %>% mutate(frame = i))
   }
   
+  # Build animated point data with highlighting effect
+  points_anim <- data.frame()
+  trigger_width <- diff(range(x))/80 # makes the black points delayed and tighter than before
+  highlight_window <- 2  # num of frames the point stays black
+  
+  for (i in seq_along(eval_x)) {
+    target_x <- eval_x[i]
+    
+    temp <- df %>%
+      mutate(
+        frame = i,
+        # distance from sweep line
+        close_now = abs(x - target_x) < trigger_width #(diff(range(x)) / 30)
+      )
+    
+    # past frames for persistence effect
+    points_anim <- rbind(points_anim, temp)
+  }
+  
+  # keeps points black for some time after being hit
+  points_anim <- points_anim %>%
+    group_by(x, y) %>%
+    mutate(
+      highlight = zoo::rollapply(close_now, width = highlight_window,
+                                 FUN = any, fill = FALSE, align = "left")
+    ) %>%
+    ungroup()
+  
   # Built the plot
   p <- ggplot() +
-    geom_point(data = df, aes(x = x, y = y), color = "grey70", alpha = 0.5) +
-    # The moving local regression line
+    geom_point(
+      data = points_anim,
+      aes(x = x, y = y, color = highlight, group = interaction(x, y)),
+      alpha = 0.7
+    ) +
+    scale_color_manual(values = c("FALSE" = "grey70", "TRUE" = "black"), guide = "none") +
+    # moving local regression line
     geom_line(data = frames_data, aes(x = line_x, y = line_y), color = "green", size = 1.2) +
-    # The emerging LOESS curve
-    geom_point(data = history_data, aes(x = x, y = y), color = "purple", size = 2) +
-    # Vertical indicator for the current evaluation point
+    # LOESS curve
+    geom_line(data = history_data, aes(x = x, y = y), color = "purple", size = 1) +
+    # vertical indicator for the current evaluation point
     geom_vline(data = frames_data, aes(xintercept = target_x), linetype = "dashed", alpha = 0.4) +
     theme_minimal() +
     labs(
