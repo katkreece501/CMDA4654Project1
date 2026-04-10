@@ -130,6 +130,10 @@ mykNN <- function(train, test, y_train, y_test, k = 3, weighted = TRUE){
     # distances for the k nearest neighbors
     nearest_d <- dists[idx]
     
+    # handle division by 0
+    nearest_d <- pmax(nearest_d, 1e-10)
+    
+    
     # dwknn or knn
     if(weighted){
       w <- 1 / nearest_d

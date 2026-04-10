@@ -745,12 +745,129 @@ legend("topright",
 ```
 
 # Problem 5
+```{r}
+set.seed(67)
 
-## Part a
+n <- 111
 
-## Part b
+train_split <- sample(1:n, size = 70)
+
+train_data <- ozone[train_split, ]
+test_data  <- ozone[-train_split, ]
+
+X_train <- as.matrix(train_data$temperature)
+X_test  <- as.matrix(test_data$temperature)
+
+y_train <- train_data$ozone
+y_test  <- test_data$ozone
+```
+
+## Part A
+```{r}
+k_values <- c(1, 3, 5, 10, 20)
+
+# storage for mse and yhat
+mse_values <- numeric(length(k_values))
+predictions <- list()
+
+for(i in seq_along(k_values)){
+  
+  k <- k_values[i]
+  
+  # dwknn
+  result <- mykNN(
+    train = X_train,
+    test = X_test,
+    y_train = y_train,
+    y_test = y_test,
+    k = k,
+    weighted = TRUE
+  )
+  
+  # Store MSE
+  mse_values[i] <- result$MSE
+  
+  # plot parameters
+  plot_df <- data.frame(
+    temp = X_test[,1],
+    ozone = y_test,
+    pred = result$yhat
+  )
+  train_df <- data.frame(
+    temp = X_train[,1],
+    ozone = y_train
+  )
+  
+p <- ggplot() +
+    # training points
+    geom_point(data = train_df,
+               aes(x = temp, y = ozone),
+               color = "black", alpha = 0.5) +
+    # testing points
+    geom_point(data = plot_df,
+               aes(x = temp, y = ozone),
+               color = "blue") +
+    # predicted points
+    geom_point(data = plot_df,
+             aes(temp, pred),
+             color = "red") +
+    # predicted points line connected
+    geom_line(data = plot_df,
+              aes(x = temp, y = pred),
+              color = "red") +
+    
+    labs(title = paste("dwkNN Regression (k =", k, ")"),
+         x = "Temperature",
+         y = "Ozone")
+print(p)
+  
+}
+
+results_table <- data.frame(
+  k = k_values,
+  MSE = mse_values
+)
+
+kable(results_table, digits = 3,
+             caption = "dwkNN Regression: MSE by k")
+```
+
+Overall we can see that MSE is minimized for k=1 and increases as we increase k. However the MSE stablizies after k=5 meaning that it is less influential on outliers. In this case, though since the jump from 1 to 5 is large anything in between should not be used or considered.
+
+## Part B
+```{r}
+y_train <- train_data$ozone
+y_test  <- test_data$ozone
+
+X_train <- as.matrix(train_data[, colnames(ozone) != "ozone"])
+X_test  <- as.matrix(test_data[, colnames(ozone) != "ozone"])
+
+k_values <- 1:20
+mse_values <- numeric(length(k_values))
+
+# loop and fit k values 1..20
+for (i in seq_along(k_values)) {
+  k <- k_values[i]
+  
+  result <- mykNN(X_train, X_test, y_train, y_test, k)
+  
+  mse_values[i] <- result$MSE
+}
+
+# plot
+plot_df <- data.frame(k = k_values, MSE = mse_values)
+
+ggplot(plot_df, aes(x = k, y = MSE)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "dwkNN: MSE vs k",
+       x = "k",
+       y = "MSE") +
+  theme_minimal()
+```
+
+From the plot we see that the MSE is minimized with k=4 with it stablizing after larger k values as expected. k=4 is the optimal value that trades off variance and stability.
 
 # Problem 6
-
 
 
