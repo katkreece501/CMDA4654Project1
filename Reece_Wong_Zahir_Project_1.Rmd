@@ -56,6 +56,7 @@ knitr::opts_chunk$set(echo = TRUE,
 ```
 
 ```{r, include=FALSE}
+# All the libraries we use, plus file for our functions
 library(ggplot2)
 library(GGally)
 library(tidyverse)
@@ -98,7 +99,7 @@ ggplot(ozone, aes(x = temperature, y = ozone)) + theme_bw() + geom_point() +
   labs(title = "Polynomial Regression of Ozone on Temperature")
 ```
 
-From the graph, it seems like the 2nd-degree fit is the best. However, none of the degrees seem to give a satisfactory fit.
+From the graph, it seems like the 2nd-degree fit is the best. However, none of the degrees seem to give a satisfactory fit. We could try increasing the degree even more, but since the 6th degree polynomial is almost completely on top of the 5th degree polynomial, it may not even make much of a difference (even if it did, we run the risk of overfitting).
 
 ## Part 2
 
@@ -141,18 +142,18 @@ From the table, the best fits with a degree of 1 occur for span values of 0.25, 
 
 ```{r}
 # Use the plots from the myloess function, but add titles
-p1 <- models_p1[[1]]$loessplot + labs(title = "degree = 1, span = 0.25",
-                                   x = "temperature", y = "ozone") 
-p2 <- models_p1[[2]]$loessplot + labs(title = "degree = 1, span = 0.30",
-                                   x = "temperature", y = "ozone")
-p3 <- models_p1[[3]]$loessplot + labs(title = "degree = 1, span = 0.35",
-                                   x = "temperature", y = "ozone")
-p4 <- models_p1[[11]]$loessplot + labs(title = "degree = 2, span = 0.25",
-                                   x = "temperature", y = "ozone")
-p5 <- models_p1[[12]]$loessplot + labs(title = "degree = 2, span = 0.30",
-                                   x = "temperature", y = "ozone")
-p6 <- models_p1[[13]]$loessplot + labs(title = "degree = 2, span = 0.35",
-                                   x = "temperature", y = "ozone")
+p1 <- models_p1[[1]]$loessplot + theme_bw(base_size = 10) +
+  labs(title = "degree = 1, span = 0.25", x = "temperature", y = "ozone")
+p2 <- models_p1[[2]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 1, span = 0.30", x = "temperature", y = "ozone")
+p3 <- models_p1[[3]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 1, span = 0.35", x = "temperature", y = "ozone")
+p4 <- models_p1[[11]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 2, span = 0.25", x = "temperature", y = "ozone")
+p5 <- models_p1[[12]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 2, span = 0.30", x = "temperature", y = "ozone")
+p6 <- models_p1[[13]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 2, span = 0.35", x = "temperature", y = "ozone")
 # Use patchwork library to plot all together
 (p1 + p2 + p3) / (p4 + p5 + p6) + plot_annotation(title = "Best LOESS fits on Ozone data")
 ```
@@ -198,22 +199,22 @@ Although the built in `loess()` function uses RSE instead of MSE, it agrees on t
 
 ```{r}
 # Use the plots from the myloess function, but add titles
-g1 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+g1 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw(base_size = 10) +
   geom_smooth(method = "loess", span = 0.25, se = F, method.args = list(degree = 1)) +
   labs(title = "degree = 1, span = 0.25")
-g2 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+g2 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw(base_size = 10) +
   geom_smooth(method = "loess", span = 0.3, se = F, method.args = list(degree = 1)) +
   labs(title = "degree = 1, span = 0.30")
-g3 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+g3 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw(base_size = 10) +
   geom_smooth(method = "loess", span = 0.35, se = F, method.args = list(degree = 1)) +
   labs(title = "degree = 1, span = 0.35")
-g4 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+g4 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw(base_size = 10) +
   geom_smooth(method = "loess", span = 0.25, se = F, method.args = list(degree = 2)) +
   labs(title = "degree = 2, span = 0.25")
-g5 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+g5 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw(base_size = 10) +
   geom_smooth(method = "loess", span = 0.3, se = F, method.args = list(degree = 2)) +
   labs(title = "degree = 2, span = 0.30")
-g6 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw() +
+g6 <- ggplot(ozone, aes(x = temperature, y = ozone)) + geom_point() + theme_bw(base_size = 10) +
   geom_smooth(method = "loess", span = 0.35, se = F, method.args = list(degree = 2)) +
   labs(title = "degree = 2, span = 0.35")
 # Use patchwork library to plot all together
@@ -275,18 +276,18 @@ For degree = 1, the best span values are 0.25, 0.30, and 0.35. For degree = 2, t
 
 ```{r}
 # Use the plots from the myloess function, but add titles
-p1 <- models_p2[[1]]$loessplot + labs(title = "degree = 1, span = 0.25",
-                                   x = "time", y = "acceleration") 
-p2 <- models_p2[[2]]$loessplot + labs(title = "degree = 1, span = 0.30",
-                                   x = "time", y = "acceleration")
-p3 <- models_p2[[3]]$loessplot + labs(title = "degree = 1, span = 0.35",
-                                   x = "time", y = "acceleration")
-p4 <- models_p2[[12]]$loessplot + labs(title = "degree = 2, span = 0.25",
-                                   x = "time", y = "acceleration")
-p5 <- models_p2[[13]]$loessplot + labs(title = "degree = 2, span = 0.30",
-                                   x = "time", y = "acceleration")
-p6 <- models_p2[[14]]$loessplot + labs(title = "degree = 2, span = 0.35",
-                                   x = "time", y = "acceleration")
+p1 <- models_p2[[1]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 1, span = 0.25", x = "time", y = "acceleration") 
+p2 <- models_p2[[2]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 1, span = 0.30", x = "time", y = "acceleration")
+p3 <- models_p2[[3]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 1, span = 0.35", x = "time", y = "acceleration")
+p4 <- models_p2[[12]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 2, span = 0.25", x = "time", y = "acceleration")
+p5 <- models_p2[[13]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 2, span = 0.30", x = "time", y = "acceleration")
+p6 <- models_p2[[14]]$loessplot + theme_bw(base_size = 10) + 
+  labs(title = "degree = 2, span = 0.35", x = "time", y = "acceleration")
 # Use patchwork library to plot all together
 (p1 + p2 + p3) / (p4 + p5 + p6) + plot_annotation(title = "Best LOESS fits on mcycle data")
 ```
@@ -557,7 +558,7 @@ Interestingly, the optimal fits look a lot different than I though they would be
 
 Using the 'gganimate' library package, we wrote an animated version of the LOESS function. Calling the function we made that animates the function- 'animated_loess', we use the function upon the 'mycycle' dataset. 
 
-```{r}
+```{r, eval = FALSE}
 # Load the motorcycle crash dataset
 data(mcycle, package = "MASS")
 
